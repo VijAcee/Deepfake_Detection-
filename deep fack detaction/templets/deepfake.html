@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Deepfake Detection{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h2 class="mb-4"><i class="fas fa-robot"></i> Deepfake Detection</h2>
+        
+        <div class="card shadow">
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#img">Image</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#vid">Video</a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <div id="img" class="tab-pane active">
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label>Image</label>
+                                <input type="file" class="form-control" name="image" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-block">Analyze</button>
+                        </form>
+                    </div>
+                    
+                    <div id="vid" class="tab-pane">
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label>Video</label>
+                                <input type="file" class="form-control" name="video" accept="video/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-block">Analyze</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if result %}
+        <div class="card shadow mt-4 border-{{ 'danger' if result.is_deepfake else 'success' }}">
+            <div class="card-header bg-{{ 'danger' if result.is_deepfake else 'success' }} text-white">
+                <h5>{{ result.result }}</h5>
+            </div>
+            <div class="card-body text-center">
+                <h3><span class="badge badge-{{ 'danger' if result.is_deepfake else 'success' }} p-3">{{ result.result }}</span></h3>
+                <p class="lead">Confidence: <strong>{{ result.confidence }}%</strong></p>
+                <p class="text-muted">Type: {{ detection_type }}</p>
+                
+                {% if img_path %}
+                <img src="{{ url_for('static', filename='uploads/' + img_path) }}" class="img-fluid mt-3" style="max-width: 300px;">
+                {% endif %}
+                
+                {% if heatmap_path %}
+                <div class="mt-4">
+                    <h5>Heatmap</h5>
+                    <img src="{{ url_for('static', filename='uploads/' + heatmap_path) }}" class="img-fluid" style="max-width: 300px;">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

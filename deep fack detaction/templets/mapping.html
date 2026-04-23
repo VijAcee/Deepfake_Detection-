@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Face Mapping{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <h2 class="mb-4"><i class="fas fa-face-smile"></i> Face Mapping</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5>Upload Image</h5>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>Select Image</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="uploadImage" name="image" accept="image/*" required>
+                            <label class="custom-file-label">Choose...</label>
+                        </div>
+                    </div>
+                    
+                    <div id="previewDiv" class="text-center mb-3">
+                        <img id="imagePreview" src="#" alt="Preview" style="max-width: 250px; display: none;">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg btn-block">Detect Faces</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5>Detection Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="resultDiv">
+                    <p class="text-muted"><em>Upload image and click detect</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('uploadImage').addEventListener('change', function(e) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        document.getElementById('imagePreview').src = event.target.result;
+        document.getElementById('imagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(e.target.files[0]);
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('uploadImage');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Select image');
+        return;
+    }
+    
+    document.getElementById('resultDiv').innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    fetch('/api/face_detection', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            let result = '<div class="alert alert-success"><h4>Faces: ' + data.faces_detected + '</h4>';
+            if (data.faces_detected > 0) {
+                result += '<p><strong>Coordinates:</strong></p><ul>';
+                data.coordinates.forEach((coord, i) => {
+                    result += '<li>Face ' + (i+1) + ': (' + coord[0] + ', ' + coord[1] + ')</li>';
+                });
+                result += '</ul>';
+            }
+            result += '</div>';
+            document.getElementById('resultDiv').innerHTML = result;
+        } else {
+            document.getElementById('resultDiv').innerHTML = '<div class="alert alert-danger">Error: ' + data.message + '</div>';
+        }
+    });
+});
+</script>
+{% endblock %}
